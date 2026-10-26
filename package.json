@@ -1,0 +1,18 @@
+{
+  "name": "suika-cat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "合成大猫咪 —— 竖屏 H5 猫咪合成小游戏，纯前端零依赖，为小红书录屏/分享设计",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "check": "node --check js/config.js && node --check js/physics.js && node --check js/art.js && node --check js/audio.js && node --check js/game.js && node --check js/sharecard.js && node --check js/main.js",
+    "test": "node tests/qa-func.mjs",
+    "shots": "node tests/shots.mjs",
+    "devices": "node tests/devices.mjs",
+    "art": "node tests/art-shot.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "devDependencies": { "puppeteer-core": "^23.11.1" }
+}

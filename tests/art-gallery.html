@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<title>猫咪美术检查</title>
+<style>html,body{margin:0;background:#fff}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="900" height="900"></canvas>
+<script src="../js/config.js"></script>
+<script src="../js/art.js"></script>
+<script>
+const ctx = document.getElementById('c').getContext('2d');
+ctx.fillStyle = '#fffaf3';
+ctx.fillRect(0, 0, 900, 900);
+const N = window.CATCFG.LEVELS.length;
+for (let i = 0; i < N; i++) {
+  const col = i % 5;
+  const row = Math.floor(i / 5);
+  const x = 100 + col * 175;
+  const y = 220 + row * 380;
+  window.CatArt.draw(ctx, { x, y, r: 78, level: i, t: 0.6, blink: false });
+  ctx.fillStyle = '#5b3b2e';
+  ctx.font = '600 22px "PingFang SC",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(i + ' ' + window.CATCFG.LEVELS[i].name, x, y + 118);
+}
+// 描边放大对照：一只猫 3 个尺寸
+window.__ART_READY = true;
+</script>
+</body></html>

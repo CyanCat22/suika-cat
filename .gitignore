@@ -1,0 +1,6 @@
+# 项目专属忽略
+.DS_Store
+node_modules/
+
+# 自动化运行时产生的临时图
+shots/_*
