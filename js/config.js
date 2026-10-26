@@ -53,6 +53,26 @@
   });
 
   CFG.MAX_LEVEL = CFG.LEVELS.length - 1;
+  CFG.TOTAL = CFG.LEVELS.length;
+
+  /* 当天日期（本地时区）与对局编号：给"挑战赛"用的轻量标识 */
+  CFG.today = function () {
+    const d = new Date();
+    const p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  };
+  CFG.hashSeed = function (str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  };
+  CFG.dayCode = function (dateStr) {
+    const s = (CFG.hashSeed('suika|' + (dateStr || CFG.today())) >>> 0).toString(36);
+    return ('000000' + s).slice(-6);
+  };
 
   /* 屏幕更瘦长时，世界按高度拉长：罐子变高、可堆更多猫 */
   CFG.relayout = function (worldH) {

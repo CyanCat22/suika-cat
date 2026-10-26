@@ -15,7 +15,7 @@ const ZIP = path.join(ROOT, 'suika-cat-minitool.zip');
 const SKILL_AUDIT = path.resolve(ROOT, '../.skill/minitool-zip-builder/scripts/audit_artifact.mjs');
 
 const ALLOWED_EXT = new Set(['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff', '.woff2', '.json']);
-const FILES = ['index.html', 'style.css', 'assets/icon-180.png', 'assets/icon-192.png', 'js/config.js', 'js/physics.js', 'js/art.js', 'js/audio.js', 'js/compat.js', 'js/xhs.js', 'js/game.js', 'js/sharecard.js', 'js/main.js'];
+const FILES = ['index.html', 'style.css', 'assets/icon-180.png', 'assets/icon-192.png', 'js/config.js', 'js/physics.js', 'js/art.js', 'js/audio.js', 'js/compat.js', 'js/xhs.js', 'js/game.js', 'js/sharecard.js', 'js/collection.js', 'js/challenge.js', 'js/main.js'];
 
 const problems = [];
 const warns = [];

@@ -154,7 +154,8 @@
     });
 
     // 图鉴
-    smallText(ctx, '猫咪图鉴', W / 2, 812, 32, 'rgba(150,96,70,0.85)', 700);
+    const collN = data.collCount != null ? data.collCount : (data.maxLevel || 0) + 1;
+    smallText(ctx, '猫咪图鉴 ' + collN + '/' + CFG.LEVELS.length, W / 2, 812, 32, 'rgba(150,96,70,0.85)', 700);
     const n = CFG.LEVELS.length;
     const cols = 5;
     const cellW = 168;
@@ -180,7 +181,8 @@
     ctx.restore();
     smallText(ctx, '你能合成「猫神」吗？', W / 2, 1306, 40, '#fff5e8', 800);
 
-    smallText(ctx, '一局只要 1 分钟 · 点开就能玩 · ' + (data.date || today()), W / 2, 1376, 24, 'rgba(140,96,74,0.85)', 600);
+    const foot = (data.nick ? data.nick + ' · ' : '') + '一局只要 1 分钟 · 点开就能玩 · ' + (data.date || today());
+    smallText(ctx, foot, W / 2, 1376, 24, 'rgba(140,96,74,0.85)', 600);
     return c;
   }
 

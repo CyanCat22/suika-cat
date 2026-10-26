@@ -185,6 +185,7 @@
       b.born = 99;
       this.bodies.push(b);
       this.dropCd = CFG.DROP_COOLDOWN;
+      if (this.hooks.onSpawn) this.hooks.onSpawn(lv);
       this.curLevel = this.nextLevel;
       this.nextLevel = CFG.randomSpawnLevel();
       this.aimX = x;
@@ -305,6 +306,7 @@
       this.bodies.push(nb);
 
       this.maxLevel = Math.max(this.maxLevel, level);
+      if (this.hooks.onMerge) this.hooks.onMerge(level);
       const cat = CFG.catOf(level);
       this.burst(mx, my, level, cat);
 

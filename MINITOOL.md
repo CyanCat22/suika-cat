@@ -2,9 +2,9 @@
 
 按 `minitool-zip-builder` v1.8.0（`.skill/minitool-zip-builder/SKILL.md`）对《合成大猫咪》做容器化改造、校验并打包。
 
-- **产物**：`suika-cat-minitool.zip`（28.7 KiB，zip 根目录直接是 `index.html`）
+- **产物**：`suika-cat-minitool.zip`（102.9 KiB，zip 根目录直接是 `index.html`）
 - **构建**：`npm run minitool`（= `node scripts/build-minitool.mjs`，会重新生成 `minitool/` 并压缩）
-- **验收**：`npm run test:minitool`（= `node tests/minitool.mjs`，解压真实 zip 后跑 22 项断言）
+- **验收**：`npm run test:minitool`（= `node tests/minitool.mjs`，解压真实 zip 后跑 38 项断言）
 
 ## 1. 在线能力核对（先做这一步再动手）
 
@@ -16,6 +16,8 @@
 | `AI.createModel(...).generateText()` 平台文本生成 | 内测加白 | 未使用（与玩法无关） |
 | `getWindowInfo` 窗口信息 / 安全区 / 顶部按钮位置 | 9.49+ | 未使用（页面用 CSS 安全区变量自适应） |
 | `getLocation` 单次定位 | 9.49+ | 未使用 |
+| `interactionOpenApi({payload:{action:'post_comment', content, media_bean, miniToolSnapshotInfo}})` 贴评论 | 9.49+ | **已使用**：「贴到评论区」（评论 ≤120 字 + 战绩卡 + snapshot） |
+| `getLaunchOptions().miniToolSnapshotInfo` 读评论快照 | 9.49+ | **已使用**：三探针读取（launchOptions → location.search → getLaunchOptions） |
 | `vibrateShort({type})` / `vibrateLong()` 振动 | 9.50+ | 未使用（未做触感反馈，避免额外权限） |
 | `startGyroscope` / `stopGyroscope` / `onGyroscopeChange` / `offGyroscopeChange` | 9.50+ | 未使用 |
 | `followAuthor` / `getFollowStatus` 关注作者 | 9.51+ | 未使用 |
@@ -53,9 +55,9 @@
 | CSS：无裸 `inset`/`aspect-ratio`、Flex 间距不依赖 `gap`（`.supports-flex-gap` 增强层除外）、每个 `clamp()/max()/min()` 声明都有旧值兜底、`backdrop-filter` 只在 `@supports` 内、安全区用 `var(--safe-area-inset-*, env(...))` | ✓ |
 | 单条内联 base64 < 100 KiB | ✓（favicon < 1 KiB） |
 | 官方审计脚本 `audit_artifact.mjs` 对目录与 zip 各跑一次 | ✓ `PASS: 11 file(s), 0 warning(s)` / zip `PASS` |
-| zip ≤ 10 MiB（建议 ≤ 2 MiB） | ✓ 28.7 KiB |
+| zip ≤ 10 MiB（建议 ≤ 2 MiB） | ✓ 102.9 KiB |
 
-### 3.2 运行验收（`tests/minitool.mjs`，22 项全过）
+### 3.2 运行验收（`tests/minitool.mjs`，38 项全过）
 
 解压真实 zip，在 headless Chrome 里用 `evaluateOnNewDocument` 注入假 `window.xhs`（buildVersion `9462004` → 9.46.2）：
 
@@ -68,12 +70,18 @@
 - [x] 保存链路：`writeTempFile` → `saveImageToPhotosAlbum({filePath})`，提示「已保存到相册」
 - [x] `postNote` 携带图片、标题 7 字（≤20）、正文 <1000 字
 - [x] 结束后 `setStorage('suika-cat-best','1286')`
+- [x] 图鉴从平台 Storage 恢复（1/10，2 级已合 3 次），解锁后写回 `suika-coll`
+- [x] 猫名从平台 Storage 回填（`suika-nick`）
+- [x] 9.46 客户端禁用「贴到评论区」
+- [x] 9.50 容器：从评论 snapshot 回场 → 首页「被挑战」横幅
+- [x] 9.50 容器：`interactionOpenApi({action:'post_comment'})`，评论 ≤120 字、带战绩卡 `media_bean`、snapshot ≤2KB、调用前先落盘 `suika-challenge`
+- [x] 结算页显示与挑战者的分数差
 - [x] 无 JS 报错
 - [x] 同包在无容器环境：隐藏「发笔记」、保存给出「长按/右键」提示、无报错
 
 ### 3.3 桌面浏览器回归
 
-`npm test` 仍是 36 项全过（玩法 / 物理 / 判负 / 像素 / 三端布局），说明容器化改造没有破坏原 Web 版。
+`npm test` 仍是 69 项全过（玩法 / 物理 / 判负 / 像素 / 三端布局 / 图鉴 / 挑战赛），说明容器化改造没有破坏原 Web 版。
 
 ## 4. 还没验证的（务必在真容器里过一遍）
 

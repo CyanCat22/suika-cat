@@ -47,19 +47,25 @@ const browser = await puppeteer.launch({
   defaultViewport: { width: 390, height: 844, deviceScaleFactor: 2 },
 });
 
-async function newPage(withContainer) {
+async function newPage(withContainer, opts) {
+  opts = opts || {};
+  const version = opts.version || 9462004;
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url()));
   if (withContainer) {
-    await page.evaluateOnNewDocument(() => {
+    await page.evaluateOnNewDocument((cfg) => {
       window.__XHS = [];
       const calls = window.__XHS;
       const seeded = { 'suika-cat-best': JSON.stringify(777), 'suika-cat-muted': JSON.stringify(true) };
+      if (cfg.coll) seeded['suika-coll'] = JSON.stringify(cfg.coll);
+      if (cfg.nick) seeded['suika-nick'] = JSON.stringify(cfg.nick);
+      const launch = { miniToolEnv: { buildVersion: cfg.version, userDataPath: '/tmp/xhs' } };
+      if (cfg.snapshot) launch.miniToolSnapshotInfo = cfg.snapshot;
       const miniTool = {
-        getLaunchOptions: () => Promise.resolve({ miniToolEnv: { buildVersion: 9462004, userDataPath: '/tmp/xhs' } }),
+        getLaunchOptions: () => Promise.resolve(launch),
         setStorage: (o) => { calls.push({ api: 'setStorage', key: o.key, data: o.data }); return Promise.resolve({ errMsg: 'setStorage:ok' }); },
         getStorage: (o) => {
           calls.push({ api: 'getStorage', key: o.key });
@@ -71,8 +77,14 @@ async function newPage(withContainer) {
         postNote: (o) => { calls.push({ api: 'postNote', title: o.title, content: o.content, media: o.mediaInfo }); return Promise.resolve({ errMsg: 'postNote:ok' }); },
         vibrateShort: () => Promise.resolve({ errMsg: 'vibrateShort:ok' }),
       };
-      window.xhs = { launchOptions: { miniToolEnv: { buildVersion: 9462004, userDataPath: '/tmp/xhs' } }, miniTool };
-    });
+      if (cfg.interaction) {
+        miniTool.interactionOpenApi = (o) => {
+          calls.push({ api: 'interactionOpenApi', payload: o.payload });
+          return Promise.resolve({ errMsg: 'interactionOpenApi:ok' });
+        };
+      }
+      window.xhs = { launchOptions: launch, miniTool };
+    }, { version, coll: opts.coll || null, nick: opts.nick || null, snapshot: opts.snapshot || null, interaction: !!opts.interaction });
   }
   await page.goto('file://' + entry, { waitUntil: 'load' });
   await page.waitForFunction('window.SUIKA_READY === true', { timeout: 15000 });
@@ -82,7 +94,11 @@ async function newPage(withContainer) {
 /* ---------- 容器内路径 ---------- */
 console.log('\n[1] 容器内（注入 window.xhs 假容器）');
 {
-  const { page, errors } = await newPage(true);
+  const { page, errors } = await newPage(true, {
+    version: 9462004,
+    coll: { '2': { n: 3, f: '2026-10-20' } },
+    nick: '旧猫名',
+  });
   await sleep(400);
   const boot = await page.evaluate(() => ({
     platform: !!window.CatPlatform,
@@ -95,6 +111,17 @@ console.log('\n[1] 容器内（注入 window.xhs 假容器）');
   ok('识别到容器并暴露端能力', boot.inContainer && boot.canSave && boot.canPost, JSON.stringify(boot));
   ok('启动时从平台缓存恢复最高分（777）', boot.best === 777, String(boot.best));
   ok('启动时从平台缓存恢复静音状态', boot.muted === true, String(boot.muted));
+
+  const collRestore = await page.evaluate(() => ({
+    unlocked: window.SUIKA.collection.unlockedCount(),
+    count: window.SUIKA.collection.countOf(2),
+    first: window.SUIKA.collection.get(2).f,
+    menu: window.SUIKA.ui.collCount(),
+    commentDisabled: window.SUIKA.ui.commentDisabled(),
+  }));
+  ok('容器内从平台 Storage 恢复图鉴（1/10，2 级已合 3 次）', collRestore.unlocked === 1 && collRestore.count === 3 && collRestore.first === '2026-10-20', JSON.stringify(collRestore));
+  ok('图鉴计数回填到首页', collRestore.menu === '1', JSON.stringify(collRestore));
+  ok('9.46 客户端禁用「贴到评论区」', collRestore.commentDisabled, JSON.stringify(collRestore));
 
   await page.evaluate(() => window.SUIKA.start());
   await sleep(300);
@@ -147,7 +174,71 @@ console.log('\n[1] 容器内（注入 window.xhs 假容器）');
 
   const storeCalls = await page.evaluate(() => window.__XHS.filter((c) => c.api === 'setStorage'));
   ok('最高分写入平台 Storage', storeCalls.some((c) => c.key === 'suika-cat-best' && c.data === '1286'), JSON.stringify(storeCalls));
+  const collStore = storeCalls.filter((c) => c.key === 'suika-coll');
+  ok('图鉴新解锁写回平台 Storage', collStore.length > 0 && /"4"/.test(collStore[collStore.length - 1].data), JSON.stringify(collStore.slice(-1)));
+  const nickRead = await page.evaluate(() => ({
+    got: window.__XHS.filter((c) => c.api === 'getStorage' && c.key === 'suika-nick').length,
+    label: window.SUIKA.nick(),
+    input: document.getElementById('nick').value,
+  }));
+  ok('猫名从平台 Storage 回填（输入框 + 状态）', nickRead.got > 0 && nickRead.label === '旧猫名' && nickRead.input === '旧猫名', JSON.stringify(nickRead));
   ok('容器内无 JS 报错 / 无资源 404', errors.length === 0, errors.join(' | '));
+  await page.close();
+}
+
+/* ---------- 9.50 + interactionOpenApi：评论区挑战赛 ---------- */
+console.log('\n[3] 9.50 容器：从评论回场 + 贴评论');
+{
+  const { page, errors } = await newPage(true, {
+    version: 9500000,
+    interaction: true,
+    snapshot: { v: 1, g: 'suika', s: 1500, lv: 5, d: '2026-10-26', n: '布偶糖主人', k: 'abc123' },
+  });
+  await sleep(500);
+  const rivalUi = await page.evaluate(() => ({
+    shown: window.SUIKA.ui.rivalShown(),
+    name: (document.getElementById('rival-name') || {}).textContent,
+    score: (document.getElementById('rival-score') || {}).textContent,
+    cat: (document.getElementById('rival-cat') || {}).textContent,
+    commentDisabled: window.SUIKA.ui.commentDisabled(),
+  }));
+  ok('从评论回场：首页显示「被挑战」横幅', rivalUi.shown && rivalUi.name === '布偶糖主人' && rivalUi.score === '1500', JSON.stringify(rivalUi));
+  ok('横幅显示挑战者合到的猫（布偶糖）', rivalUi.cat === '布偶糖', JSON.stringify(rivalUi));
+  ok('9.50 客户端启用「贴到评论区」', rivalUi.commentDisabled === false, JSON.stringify(rivalUi));
+
+  const flow = await page.evaluate(async () => {
+    const g = window.SUIKA.game;
+    window.SUIKA.start();
+    g.score = 1200; g.maxLevel = 4; g.maxCombo = 3; g.totalMerges = 11;
+    g.gameOver();
+    for (let i = 0; i < 60; i++) g.update(1 / 60);
+    await new Promise((r) => setTimeout(r, 200));
+    const compare = window.SUIKA.ui.overCompare();
+    document.getElementById('btn-share').click();
+    await new Promise((r) => setTimeout(r, 250));
+    document.getElementById('btn-comment').click();
+    await new Promise((r) => setTimeout(r, 600));
+    return {
+      compare,
+      calls: window.__XHS.map((c) => c.api),
+      comment: window.__XHS.filter((c) => c.api === 'interactionOpenApi')[0],
+      stored: window.__XHS.filter((c) => c.api === 'setStorage' && c.key === 'suika-challenge'),
+      tip: document.getElementById('save-tip').textContent,
+    };
+  });
+  ok('结算页显示与挑战者的分数差', /还差 300 分/.test(flow.compare), flow.compare);
+  const payload = flow.comment && flow.comment.payload;
+  ok('「贴到评论区」调用 interactionOpenApi(post_comment)', !!payload && payload.action === 'post_comment', JSON.stringify(payload && payload.action));
+  ok('评论内容 ≤120 字且带分数', !!payload && payload.content.length <= 120 && payload.content.indexOf('1200') >= 0, payload && payload.content);
+  const bean = payload && payload.media_bean && payload.media_bean[0];
+  ok('评论带战绩卡图片（media_bean）', !!bean && bean.media_type === 'image' && /^(data:image\/png;base64,|xhs-temp:)/.test(bean.cover_image_url), JSON.stringify(bean && bean.media_type));
+  const rawSnap = payload && payload.miniToolSnapshotInfo;
+  let snapObj = null;
+  try { snapObj = typeof rawSnap === 'string' ? JSON.parse(rawSnap) : rawSnap; } catch (e) {}
+  ok('评论携带 snapshot（≤2KB，分数一致）', !!snapObj && JSON.stringify(snapObj).length <= 2048 && snapObj.s === 1200 && snapObj.g === 'suika', JSON.stringify(snapObj));
+  ok('贴评论前先把 challenge 落盘', flow.stored.length > 0, JSON.stringify(flow.stored.length));
+  ok('评论后给出可见反馈', /评论区|发送|失败/.test(flow.tip), flow.tip);
+  ok('9.50 容器路径无 JS 报错', errors.length === 0, errors.join(' | '));
   await page.close();
 }
 

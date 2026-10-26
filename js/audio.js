@@ -135,6 +135,15 @@
     },
 
     click: function () { this.tone(660, 0.06, 'square', 0.05, 880); },
+
+    /* 新图鉴解锁：三连上行 + 一点高频颗粒 */
+    unlock: function () {
+      const seq = [784, 988, 1319];
+      for (let i = 0; i < seq.length; i++) {
+        setTimeout(() => this.tone(seq[i], 0.24, 'triangle', 0.1), i * 100);
+      }
+      this.burst(0.1, 0.03, 3000, 2.0);
+    },
   });
 
   try { A.muted = localStorage.getItem('suika-cat-muted') === '1'; } catch (e) {}

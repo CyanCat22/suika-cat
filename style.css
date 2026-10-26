@@ -374,3 +374,230 @@ body {
   #menu-chain { max-width: 380px; }
   .logo { font-size: 9vmin; font-size: clamp(30px, 9vmin, 46px); }
 }
+
+/* ============================================================
+ * 图鉴收集 + 评论区挑战（2026-10-26 按 GAME-CONVENTIONS §9/§10 追加）
+ * ============================================================ */
+.hidden { display: none !important; }
+
+/* ---------- 图鉴解锁提示（游戏内浮层） ---------- */
+.coll-toast {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translate(-50%, -6px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(91, 59, 46, 0.88);
+  color: #fff7ec;
+  font-size: 12px;
+  font-size: max(12px, 2.7vmin);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.24s, transform 0.24s, visibility 0.24s;
+  pointer-events: none;
+  z-index: 6;
+}
+.coll-toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+
+/* ---------- 被挑战横幅 ---------- */
+.rival {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 440px;
+  padding: 9px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 6px 18px rgba(190, 130, 90, 0.16);
+  font-size: 13px;
+  font-size: max(13px, 2.9vmin);
+  color: #7a5038;
+}
+.rival-line { flex: 1; margin-right: 10px; line-height: 1.45; }
+.rival-line b { color: #e2702a; }
+.btn-mini {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffa75c, #ff8a3d);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 0 #e2702a;
+}
+.btn-mini:active { transform: translateY(2px); box-shadow: 0 2px 0 #e2702a; }
+
+/* ---------- 首页统计行 / 猫名 ---------- */
+.menu-stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-size: max(12px, 2.7vmin);
+  color: rgba(150, 96, 70, 0.95);
+  font-weight: 600;
+}
+.menu-stats b { color: #e2702a; font-size: 1.35em; font-weight: 900; }
+.menu-stats .dot { margin: 0 6px; color: rgba(176, 120, 92, 0.5); }
+
+.nick-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+  padding: 6px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(190, 130, 90, 0.12);
+}
+.nick-row label { flex: 0 0 auto; font-size: 12px; font-weight: 800; color: rgba(150, 96, 70, 0.9); margin-right: 10px; }
+#nick {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5b3b2e;
+  text-align: center;
+}
+#nick::placeholder { color: rgba(160, 110, 84, 0.45); font-weight: 500; }
+
+.btn-small {
+  width: auto;
+  min-width: 46%;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-size: max(13px, 3vmin);
+}
+
+/* ---------- 图鉴进度条（首页/结算共用） ---------- */
+.coll-mini {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 14px;
+  padding: 9px 12px;
+  box-shadow: 0 4px 12px rgba(190, 130, 95, 0.12);
+}
+.coll-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12px;
+  font-size: max(12px, 2.6vmin);
+  color: rgba(150, 100, 76, 0.9);
+  font-weight: 700;
+}
+.coll-head b { color: #e2702a; font-size: 1.3em; }
+.coll-track {
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(198, 150, 110, 0.24);
+  overflow: hidden;
+}
+.coll-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffcf6a, #ff9d5c);
+  transition: width 0.35s ease;
+}
+.compare {
+  width: 100%;
+  max-width: 440px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  background: rgba(255, 238, 214, 0.95);
+  font-size: 13px;
+  font-size: max(13px, 2.8vmin);
+  color: #7a5038;
+  line-height: 1.5;
+}
+
+/* ---------- 图鉴面板 ---------- */
+#gallery {
+  justify-content: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  text-align: center;
+}
+.gal-head { width: 100%; max-width: 460px; text-align: left; }
+.gal-title { font-size: 20px; font-size: max(20px, 4.6vmin); font-weight: 900; color: #5b3b2e; }
+.gal-title span { color: #e2702a; }
+.gal-sub { margin-top: 3px; font-size: 12px; font-size: max(12px, 2.7vmin); color: rgba(150, 96, 70, 0.9); }
+.gal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 460px;
+  margin-top: 6px;
+}
+.gal-cell {
+  width: calc(50% - 5px);
+  margin-top: 10px;
+  padding: 10px 8px 9px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 6px 16px rgba(190, 130, 90, 0.12);
+}
+.gal-cell.locked { background: rgba(255, 255, 255, 0.5); box-shadow: none; }
+.gal-cell canvas { display: block; width: 64px; height: 64px; margin: 0 auto; }
+.gal-name { margin-top: 5px; font-size: 13px; font-size: max(13px, 2.9vmin); font-weight: 800; color: #5b3b2e; }
+.gal-cell.locked .gal-name { color: rgba(120, 96, 82, 0.55); }
+.gal-meta { margin-top: 2px; font-size: 11px; font-size: max(11px, 2.4vmin); color: rgba(150, 100, 76, 0.85); }
+.gal-tip { font-size: 11px; font-size: max(11px, 2.4vmin); color: rgba(160, 110, 84, 0.75); margin-top: 10px; }
+
+/* ---------- 分享面板的评论文案 ---------- */
+.row-btns-2 { margin-top: 8px; }
+.share-text {
+  width: 100%;
+  max-width: 440px;
+  max-height: 22%;
+  max-height: 22vh;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-size: max(12px, 2.6vmin);
+  color: #6b4a38;
+  line-height: 1.6;
+  text-align: left;
+  white-space: pre-wrap;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+@media (max-height: 620px) {
+  .menu-stats { font-size: 11px; }
+  .nick-row { padding: 5px 12px; }
+  .btn-small { padding: 8px 14px; }
+  .gal-cell canvas { width: 52px; height: 52px; }
+  .gal-cell { margin-top: 8px; padding: 8px 6px; }
+  .coll-mini, .compare { padding: 7px 10px; }
+  .stat-grid > div { padding: 8px 3px; }
+  #over-score { font-size: 20vmin; font-size: clamp(64px, 20vmin, 120px); }
+}
+
+/* 结算页三按钮一行放得下 */
+.row-btns > .btn-ghost {
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: 12px;
+  font-size: max(12px, 2.9vmin);
+}

@@ -357,6 +357,243 @@ ok('宽屏保持 9:16 居中', Math.abs(desk.ratio - 0.5625) < 0.01 && desk.worl
 ok('无横向 / 纵向滚动', !desk.overflowX && !desk.overflowY, JSON.stringify(desk));
 ok('无 JS 报错', errors.length === 0, errors.join(' | '));
 
+
+/* ================= 图鉴收集 / 评论区挑战（2026-10-26 追加） ================= */
+console.log('\n[10] 图鉴收集');
+await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+await page.evaluate(() => { try { localStorage.clear(); } catch (e) {} });
+await page.reload({ waitUntil: 'load' });
+await page.waitForFunction('window.SUIKA_READY === true');
+await sleep(300);
+
+const coll0 = await page.evaluate(() => {
+  SUIKA.renderGallery();
+  return {
+    unlocked: SUIKA.collection.unlockedCount(),
+    total: SUIKA.collection.progress().total,
+    title: SUIKA.collection.title(),
+    menuCount: SUIKA.ui.collCount(),
+    locked: SUIKA.lockedCount(),
+    cells: SUIKA.galleryCount(),
+    firstLockedName: (document.querySelector('.gal-cell.locked .gal-name') || {}).textContent,
+  };
+});
+ok('初始 0/10，全锁，称号=猫咖实习生', coll0.unlocked === 0 && coll0.total === 10 && coll0.title === '猫咖实习生', JSON.stringify(coll0));
+ok('图鉴面板 10 格、全部剪影、名字为 ？？？', coll0.cells === 10 && coll0.locked === 10 && coll0.firstLockedName === '？？？', JSON.stringify(coll0));
+ok('首页计数与图鉴一致', coll0.menuCount === '0');
+
+// 合成 L1→L2 解锁「狸花仔」
+const m1 = await page.evaluate(async () => {
+  SUIKA.start();
+  const g = SUIKA.game, P = window.CatPhysics;
+  const a = P.makeBody(1, 320, 900, {}), b = P.makeBody(1, 380, 900, {});
+  g.bodies.push(a, b);
+  g.doMerge(a, b);
+  g.bodies.length = 0;   // 清场：避免物理继续把新猫连锁合成
+  await new Promise((r) => setTimeout(r, 120));
+  SUIKA.renderGallery();
+  const cell = document.querySelectorAll('#gal-grid .gal-cell')[2];
+  return {
+    unlocked: SUIKA.collection.unlockedCount(),
+    count: SUIKA.collection.countOf(2),
+    name: cell.querySelector('.gal-name').textContent,
+    locked: cell.classList.contains('locked'),
+    menuCount: SUIKA.ui.collCount(),
+    first: SUIKA.collection.get(2).f,
+    toast: (document.getElementById('coll-toast') || {}).textContent || '',
+  };
+});
+ok('合成出 2 级 → 图鉴 +1 且解锁「狸花仔」', m1.unlocked === 1 && m1.name === '狸花仔' && !m1.locked, JSON.stringify(m1));
+ok('解锁有提示（新图鉴 toast / 计数同步）', m1.toast.indexOf('新图鉴') >= 0 && m1.menuCount === '1', m1.toast);
+ok('首次解锁记录日期', /^\d{4}-\d{2}-\d{2}$/.test(m1.first || ''), m1.first);
+
+const m2 = await page.evaluate(async () => {
+  const g = SUIKA.game, P = window.CatPhysics;
+  // 再次合成 1→2：次数 +1，不再重复解锁
+  const a = P.makeBody(1, 300, 900, {}), b = P.makeBody(1, 360, 900, {});
+  g.bodies.push(a, b);
+  g.doMerge(a, b);
+  g.bodies.length = 0;
+  await new Promise((r) => setTimeout(r, 80));
+  return { count: SUIKA.collection.countOf(2), unlocked: SUIKA.collection.unlockedCount() };
+});
+ok('重复合成只加次数、不重复解锁', m2.count >= 2 && m2.unlocked === 1, JSON.stringify(m2));
+
+// 刷新后图鉴还在
+await page.reload({ waitUntil: 'load' });
+await page.waitForFunction('window.SUIKA_READY === true');
+await sleep(250);
+const persisted = await page.evaluate(() => ({
+  unlocked: SUIKA.collection.unlockedCount(),
+  count: SUIKA.collection.countOf(2),
+  menuCount: SUIKA.ui.collCount(),
+}));
+ok('刷新页面后图鉴仍在（localStorage 持久化）', persisted.unlocked === 1 && persisted.count >= 2 && persisted.menuCount === '1', JSON.stringify(persisted));
+
+// 集齐 → 称号升级
+const allDone = await page.evaluate(async () => {
+  for (let i = 0; i < window.CATCFG.TOTAL; i++) SUIKA.collection.record(i, '2026-10-26');
+  SUIKA.renderGallery();
+  return {
+    unlocked: SUIKA.collection.unlockedCount(),
+    title: SUIKA.collection.title(),
+    remain: SUIKA.collection.remain(),
+    menuTitle: SUIKA.ui.collTitle(),
+    locked: SUIKA.lockedCount(),
+    tip: document.getElementById('gal-tip').textContent,
+  };
+});
+ok('集齐 10 只 → 猫咖店长，进度 10/10', allDone.unlocked === 10 && allDone.title === '猫咖店长' && allDone.remain === 0, JSON.stringify(allDone));
+ok('集齐后图鉴无剪影、首页称号同步', allDone.locked === 0 && allDone.menuTitle === '猫咖店长' && allDone.tip.indexOf('猫咖店长') >= 0, JSON.stringify(allDone));
+
+console.log('\n[11] 评论区挑战赛');
+const snapInfo = await page.evaluate(() => {
+  SUIKA.setNick('橘座大王');
+  const info = { score: 1286, maxLevel: 6, maxCombo: 5, merges: 21, date: '2026-10-26', code: window.CATCFG.dayCode('2026-10-26'), nick: '橘座大王', collection: 10 };
+  const enc = SUIKA.challenge.encodeSnapshot(info);
+  const dec = SUIKA.challenge.decodeSnapshot(enc.data);
+  return {
+    json: enc.json, bytes: enc.json.length, data: enc.data,
+    dec, comment: SUIKA.challenge.commentText(info),
+    title: SUIKA.challenge.noteTitle(info), content: SUIKA.challenge.noteContent(info),
+    badG: SUIKA.challenge.decodeSnapshot({ v: 1, g: 'whack', s: 100, lv: 1 }),
+    badS: SUIKA.challenge.decodeSnapshot({ v: 1, g: 'suika', s: -5, lv: 1 }),
+    nick: SUIKA.nick(),
+  };
+});
+ok('snapshot 字段齐全且 ≤2KB', snapInfo.data.g === 'suika' && snapInfo.data.s === 1286 && snapInfo.data.lv === 6 && snapInfo.bytes <= 2048, JSON.stringify(snapInfo.data) + ' ' + snapInfo.bytes + 'B');
+ok('snapshot 能正确解码回分数/等级/猫名', snapInfo.dec && snapInfo.dec.score === 1286 && snapInfo.dec.label === '缅因塔' && snapInfo.dec.nick === '橘座大王', JSON.stringify(snapInfo.dec));
+ok('拒绝别的游戏的 snapshot', snapInfo.badG === null);
+ok('拒绝负数分数', snapInfo.badS === null);
+ok('评论文案 ≤120 且带分数', snapInfo.comment.length <= 120 && snapInfo.comment.indexOf('1286') >= 0, snapInfo.comment);
+ok('笔记标题 ≤20 / 正文 ≤1000', snapInfo.title.length <= 20 && snapInfo.content.length <= 1000, snapInfo.title.length + '/' + snapInfo.content.length);
+ok('猫名生效', snapInfo.nick === '橘座大王');
+
+// 被挑战：写 rival → 刷新 → 首页横幅
+await page.evaluate(() => {
+  localStorage.setItem('suika-rival', JSON.stringify({ v: 1, g: 'suika', s: 1500, lv: 5, d: '2026-10-26', n: '布偶糖主人', k: 'abc123' }));
+});
+await page.reload({ waitUntil: 'load' });
+await page.waitForFunction('window.SUIKA_READY === true');
+await sleep(300);
+const rivalUi = await page.evaluate(() => ({
+  shown: SUIKA.ui.rivalShown(),
+  name: (document.getElementById('rival-name') || {}).textContent,
+  score: (document.getElementById('rival-score') || {}).textContent,
+  cat: (document.getElementById('rival-cat') || {}).textContent,
+  level: SUIKA.rival() && SUIKA.rival().maxLevel,
+}));
+ok('从评论回场显示「被挑战」横幅', rivalUi.shown === true && rivalUi.name === '布偶糖主人' && rivalUi.score === '1500', JSON.stringify(rivalUi));
+ok('横幅带挑战者的猫（布偶糖）', rivalUi.cat === '布偶糖' && rivalUi.level === 5, JSON.stringify(rivalUi));
+
+// 结算对比：低 / 高 / 平
+const cmp = await page.evaluate(async () => {
+  const g = SUIKA.game;
+  function finish(score) {
+    SUIKA.start();
+    g.score = score; g.maxLevel = 3; g.totalMerges = 9; g.maxCombo = 2;
+    g.gameOver();
+    for (let i = 0; i < 20; i++) g.update(0.05);   // headless 下 rAF 慢，手动推进结算动画
+    return { text: SUIKA.ui.overCompare(), score: SUIKA.ui.overScore() };
+  }
+  const low = finish(1200);
+  const high = finish(1800);
+  const tie = finish(1500);
+  return { low, high, tie };
+});
+ok('结算对比：低分 → 还差 300 分', cmp.low.text.indexOf('还差 300 分') >= 0, JSON.stringify(cmp.low));
+ok('结算对比：高分 → 比挑战者高 300 分', cmp.high.text.indexOf('高 300 分') >= 0, JSON.stringify(cmp.high));
+ok('结算对比：同分 → 平手', cmp.tie.text.indexOf('平手') >= 0, JSON.stringify(cmp.tie));
+
+console.log('\n[12] 分享面板 / 文案');
+const panel = await page.evaluate(() => {
+  // 无容器环境：贴评论入口应禁用，但「查看文案」可用
+  const btn = document.getElementById('btn-comment');
+  SUIKA.setNick('橘座大王');
+  return { disabled: !!(btn && btn.disabled), state: SUIKA.state };
+});
+ok('无容器环境禁用「贴到评论区」（不留死按钮）', panel.disabled, JSON.stringify(panel));
+
+// 结算 → 生成战绩卡 → 查看文案
+const cardInfo = await page.evaluate(async () => {
+  const g = SUIKA.game;
+  SUIKA.start();
+  g.score = 888; g.maxLevel = 4; g.totalMerges = 12; g.maxCombo = 3;
+  g.gameOver();
+  for (let i = 0; i < 20; i++) g.update(0.05);
+  document.getElementById('btn-share').click();
+  await new Promise((r) => setTimeout(r, 150));
+  document.getElementById('btn-copy').click();
+  const cv = SUIKA.cardCanvas();
+  return {
+    card: [cv.width, cv.height],
+    text: SUIKA.ui.shareText(),
+    imgShown: !!(document.getElementById('share-img') || {}).src,
+    cardSnap: SUIKA.challenge.encodeSnapshot(SUIKA.shareInfo()),
+  };
+});
+ok('战绩卡 1080×1440 且预览可见', cardInfo.card[0] === 1080 && cardInfo.card[1] === 1440 && cardInfo.imgShown, JSON.stringify(cardInfo.card));
+ok('「查看文案」展开可复制的正文', cardInfo.text.indexOf('888') >= 0 && cardInfo.text.indexOf('合成大猫咪') >= 0, cardInfo.text.slice(0, 60));
+ok('分享用的 snapshot 也 ≤2KB', cardInfo.cardSnap.json.length <= 2048, String(cardInfo.cardSnap.json.length));
+
+console.log('\n[13] 新界面布局（320 / 360 / 390）');
+for (const vp of [{ w: 390, h: 844 }, { w: 360, h: 640 }, { w: 320, h: 568 }]) {
+  await page.setViewport({ width: vp.w, height: vp.h, deviceScaleFactor: 2 });
+  await page.evaluate(() => { SUIKA.overlay('menu'); });
+  await sleep(200);
+  const lay = await page.evaluate(() => {
+    const start = document.getElementById('btn-start').getBoundingClientRect();
+    const menu = document.getElementById('menu');
+    const stats = document.querySelector('.menu-stats').getBoundingClientRect();
+    const nick = document.querySelector('.nick-row').getBoundingClientRect();
+    return {
+      startBottom: Math.round(start.bottom),
+      vh: innerHeight,
+      overflowX: document.documentElement.scrollWidth > innerWidth + 1,
+      menuOverflow: menu.scrollHeight > menu.clientHeight + 2,
+      statsW: Math.round(stats.width),
+      nickW: Math.round(nick.width),
+    };
+  });
+  ok(vp.w + '×' + vp.h + ' 首页按钮在视口内、无溢出', lay.startBottom <= lay.vh && !lay.overflowX && !lay.menuOverflow, JSON.stringify(lay));
+
+  // 图鉴 2 列
+  await page.evaluate(() => SUIKA.openGallery());
+  await sleep(200);
+  const gal = await page.evaluate(() => {
+    const cells = [].slice.call(document.querySelectorAll('.gal-cell'));
+    const rowTop = cells[0].getBoundingClientRect().top;
+    const sameRow = cells.filter((c) => Math.abs(c.getBoundingClientRect().top - rowTop) < 2).length;
+    const g = document.getElementById('gallery');
+    return { sameRow, cellW: Math.round(cells[0].getBoundingClientRect().width), scrollable: g.scrollHeight > g.clientHeight, overflowX: document.documentElement.scrollWidth > innerWidth + 1 };
+  });
+  ok(vp.w + '×' + vp.h + ' 图鉴每行 2 列、可滚动、无横向溢出', gal.sameRow === 2 && !gal.overflowX && gal.cellW > 100, JSON.stringify(gal));
+}
+
+// 结算页在最小屏不溢出
+await page.setViewport({ width: 320, height: 568, deviceScaleFactor: 2 });
+await page.evaluate(async () => {
+  const g = SUIKA.game;
+  SUIKA.start();
+  g.score = 666; g.maxLevel = 3; g.gameOver();
+  for (let i = 0; i < 20; i++) g.update(0.05);
+  await new Promise((r) => setTimeout(r, 120));
+});
+await sleep(200);
+const overLay = await page.evaluate(() => {
+  const over = document.getElementById('over');
+  const again = document.getElementById('btn-again').getBoundingClientRect();
+  const share = document.getElementById('btn-share').getBoundingClientRect();
+  const home = document.getElementById('btn-home').getBoundingClientRect();
+  return {
+    overflow: over.scrollHeight > over.clientHeight + 2,
+    againVisible: again.bottom <= innerHeight && again.top >= 0,
+    rowVisible: Math.max(share.bottom, home.bottom) <= innerHeight,
+    rowSameLine: Math.abs(share.top - home.top) < 2,
+  };
+});
+ok('320×568 结算页不溢出、三按钮同排可见', !overLay.overflow && overLay.againVisible && overLay.rowVisible && overLay.rowSameLine, JSON.stringify(overLay));
+
 console.log('\n结果: ' + pass + ' 通过, ' + fails.length + ' 失败');
 if (fails.length) {
   console.log('失败项:');

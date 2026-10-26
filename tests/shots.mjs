@@ -22,6 +22,22 @@ page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 await page.goto('file://' + path.join(ROOT_DIR, 'index.html'), { waitUntil: 'domcontentloaded' });
 await page.waitForFunction('window.SUIKA_READY === true');
+
+// 预置演示数据：图鉴 6/10、最高分 1286、猫名、被挑战横幅
+await page.evaluate(() => {
+  const coll = {};
+  ['0', '1', '2', '3', '4', '5'].forEach((k, i) => {
+    coll[k] = { n: 2 + i, f: '2026-10-2' + (i + 1) };
+  });
+  try {
+    localStorage.setItem('suika-coll', JSON.stringify(coll));
+    localStorage.setItem('suika-nick', JSON.stringify('橘座大王'));
+    localStorage.setItem('suika-cat-best', '1286');
+    localStorage.setItem('suika-rival', JSON.stringify({ v: 1, g: 'suika', s: 1500, lv: 5, d: '2026-10-26', n: '布偶糖主人', k: 'abc123' }));
+  } catch (e) {}
+});
+await page.reload({ waitUntil: 'load' });
+await page.waitForFunction('window.SUIKA_READY === true');
 await sleep(900);
 
 const shot = async (name) => {
@@ -103,9 +119,16 @@ await page.evaluate(() => { const g = window.SUIKA.game; for (let i = 0; i < 60;
 await sleep(500);
 await shot('over');
 
+// 6b. 图鉴面板
+await page.evaluate(() => window.SUIKA.openGallery());
+await sleep(600);
+await shot('gallery');
+await page.evaluate(() => window.SUIKA.overlay('menu'));
+
 // 7. 战绩卡
 const cardDataUrl = await page.evaluate(() => window.CatShare.card({
   score: 1286, best: 1286, isRecord: true, maxLevel: 7, totalMerges: 46, maxCombo: 6,
+  nick: '橘座大王', collCount: 6, date: '2026-10-26',
 }).toDataURL('image/png'));
 fs.writeFileSync(path.join(SHOTS, 'xhs-card.png'), Buffer.from(cardDataUrl.split(',')[1], 'base64'));
 console.log('  · xhs-card.png (1080×1440)');
@@ -119,7 +142,7 @@ console.log('  · xhs-cover.png (1080×1440)');
 await page.evaluate(() => { window.SUIKA.overlay('share'); });
 await page.evaluate(() => {
   const img = document.getElementById('share-img');
-  img.src = window.CatShare.card({ score: 1286, best: 1286, isRecord: true, maxLevel: 7, totalMerges: 46, maxCombo: 6 }).toDataURL('image/png');
+  img.src = window.CatShare.card({ score: 1286, best: 1286, isRecord: true, maxLevel: 7, totalMerges: 46, maxCombo: 6, nick: '橘座大王', collCount: 6, date: '2026-10-26' }).toDataURL('image/png');
 });
 await sleep(400);
 await shot('share-overlay');

@@ -26,6 +26,7 @@
     </div>
 
     <div id="hint" class="hint">拖动猫咪选位置 · 松手投放 🐾</div>
+    <div id="coll-toast" class="coll-toast"></div>
 
     <!-- 首页 -->
     <section id="menu" class="screen show">
@@ -40,7 +41,26 @@
         <li>两只同款猫碰到一起，就会进化成下一只</li>
         <li>猫堆别超过虚线，撑住 <b>1.7 秒</b> 就结束</li>
       </ul>
+      <div id="rival-banner" class="rival hidden">
+        <div class="rival-line"><b id="rival-name">橘座</b> 打了 <b id="rival-score">0</b> 分（<span id="rival-cat">奶团子</span>）</div>
+        <button id="btn-rival" class="btn-mini">我 也 来</button>
+      </div>
+
+      <div class="menu-stats">
+        <span>最高分 <b id="menu-best">0</b></span>
+        <span class="dot">·</span>
+        <span>图鉴 <b id="coll-count">0</b>/10</span>
+        <span class="dot">·</span>
+        <span id="coll-title-text">猫咖实习生</span>
+      </div>
+
+      <div class="nick-row">
+        <label for="nick">猫名</label>
+        <input id="nick" maxlength="8" placeholder="路人猫" autocomplete="off">
+      </div>
+
       <button id="btn-start" class="btn-main">开 始 撸 猫</button>
+      <button id="btn-gallery" class="btn-ghost btn-small">我 的 图 鉴</button>
       <p class="footnote">纯前端 · 零依赖 · 一局 1 分钟</p>
     </section>
 
@@ -57,9 +77,19 @@
         <div><span>合成次数</span><b id="over-merge">0</b></div>
         <div><span>最高连击</span><b id="over-combo">x0</b></div>
       </div>
+      <div class="coll-mini">
+        <div class="coll-head">
+          <span>猫咪图鉴 <b id="res-coll-count">0</b>/10</span>
+          <span id="res-coll-title">猫咖实习生</span>
+        </div>
+        <div class="coll-track"><div id="res-coll-fill" class="coll-fill"></div></div>
+      </div>
+      <div id="over-compare" class="compare hidden"></div>
+
       <button id="btn-again" class="btn-main">再 来 一 局</button>
       <div class="row-btns">
         <button id="btn-share" class="btn-ghost">生成战绩卡</button>
+        <button id="btn-gallery2" class="btn-ghost">看我的图鉴</button>
         <button id="btn-home" class="btn-ghost">回首页</button>
       </div>
       <p class="footnote">点「生成战绩卡」→ 保存图片，直接发小红书</p>
@@ -72,6 +102,17 @@
       <button id="btn-restart" class="btn-ghost">重新开始</button>
     </section>
 
+    <!-- 图鉴 -->
+    <section id="gallery" class="screen">
+      <div class="gal-head">
+        <div class="gal-title">猫咪图鉴 <span id="gal-count">0</span>/10</div>
+        <div class="gal-sub" id="gal-title-text">猫咖实习生</div>
+      </div>
+      <div class="gal-grid" id="gal-grid"></div>
+      <p class="gal-tip" id="gal-tip">合出过的猫会亮起来，点格子看它的名字</p>
+      <button id="btn-close-gallery" class="btn-ghost">返 回</button>
+    </section>
+
     <!-- 分享图 -->
     <section id="share" class="screen">
       <h2 class="pause-title">战 绩 卡</h2>
@@ -80,7 +121,12 @@
         <button id="btn-save" class="btn-main">保存图片</button>
         <button id="btn-post" class="btn-ghost" hidden>发笔记</button>
       </div>
+      <div class="row-btns row-btns-2">
+        <button id="btn-comment" class="btn-ghost">贴到评论区</button>
+        <button id="btn-copy" class="btn-ghost">查看文案</button>
+      </div>
       <p id="save-tip" class="save-tip">已保存 · 手机端可长按图片存相册</p>
+      <div id="share-text" class="share-text hidden"></div>
       <button id="btn-close-share" class="btn-ghost">关闭</button>
     </section>
   </div>
@@ -94,6 +140,8 @@
 <script src="js/xhs.js"></script>
 <script src="js/game.js"></script>
 <script src="js/sharecard.js"></script>
+<script src="js/collection.js"></script>
+<script src="js/challenge.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
