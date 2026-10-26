@@ -76,6 +76,19 @@
 
 部署到 HTTPS 静态托管（GitHub Pages / Vercel / 任意对象存储静态站）后，手机浏览器打开链接即可；GitHub Pages 放好本目录并保留 `.nojekyll` 就能跑，无需构建。
 
+## 部署到 GitHub Pages
+
+本目录已经是一个独立的 git 仓库（分支 `main`，含初始提交），推送后即可上线：
+
+```bash
+gh auth login        # 本机 GitHub CLI 只需登录一次
+./deploy.sh          # 建仓库 CyanCat22/suika-cat → 推送 → 开启 Pages → 探测上线
+```
+
+- 手动方式：GitHub 新建空仓库 → `git remote add origin git@github.com:<你>/suika-cat.git` → `git push -u origin main` → Settings → Pages → Source 选 `main` / `/ (root)`（根目录已有 `.nojekyll`，无需 Actions）。
+- 上线地址形如 `https://<你>.github.io/suika-cat/`，手机浏览器直接打开即可玩；也可以 README 顶部换成在线试玩链接。
+- 想换仓库名/账号：`OWNER=xxx REPO=yyy ./deploy.sh`。
+
 ## 技术说明
 
 - **渲染**：Canvas 2D，逻辑坐标系 720×(≥1280)；比 9:16 更瘦长的手机屏会按宽度铺满并把世界纵向拉长，iPhone 上**满屏无黑边**；宽屏则 9:16 居中。
