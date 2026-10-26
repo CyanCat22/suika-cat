@@ -1,5 +1,7 @@
 # 合成大猫咪 · 一局 1 分钟的猫咪合成小游戏
 
+**▶ 在线试玩：[cyancat22.github.io/suika-cat](https://cyancat22.github.io/suika-cat/)** ｜ [GitHub 仓库](https://github.com/CyanCat22/suika-cat)
+
 **竖屏手机 H5 小游戏，为小红书而生**：打开链接就能玩，全矢量手绘猫咪、实时合成音效、结束后一键生成 3:4「战绩卡」直接发笔记。
 
 - 玩法：拖动决定落点 → 松手把猫丢进罐子 → **两只一样的猫碰到一起，合成下一级** → 10 级进化到「猫神」。
@@ -78,7 +80,9 @@
 
 ## 部署到 GitHub Pages
 
-本目录已经是一个独立的 git 仓库（分支 `main`，含初始提交），推送后即可上线：
+已部署：**<https://cyancat22.github.io/suika-cat/>**（仓库 [CyanCat22/suika-cat](https://github.com/CyanCat22/suika-cat)，Pages 走 `main` 根目录 + `.nojekyll`，无 Actions）。
+
+本目录是独立 git 仓库，换账号/改名后可重新发布：
 
 ```bash
 gh auth login        # 本机 GitHub CLI 只需登录一次
@@ -86,7 +90,7 @@ gh auth login        # 本机 GitHub CLI 只需登录一次
 ```
 
 - 手动方式：GitHub 新建空仓库 → `git remote add origin git@github.com:<你>/suika-cat.git` → `git push -u origin main` → Settings → Pages → Source 选 `main` / `/ (root)`（根目录已有 `.nojekyll`，无需 Actions）。
-- 上线地址形如 `https://<你>.github.io/suika-cat/`，手机浏览器直接打开即可玩；也可以 README 顶部换成在线试玩链接。
+- 上线地址形如 `https://<你>.github.io/suika-cat/`，手机浏览器直接打开即可玩。
 - 想换仓库名/账号：`OWNER=xxx REPO=yyy ./deploy.sh`。
 
 ## 技术说明
