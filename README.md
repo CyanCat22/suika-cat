@@ -93,6 +93,20 @@ gh auth login        # 本机 GitHub CLI 只需登录一次
 - 上线地址形如 `https://<你>.github.io/suika-cat/`，手机浏览器直接打开即可玩。
 - 想换仓库名/账号：`OWNER=xxx REPO=yyy ./deploy.sh`。
 
+## 小红书小工具版（离线 zip）
+
+除了直接部署的 H5，本仓库还能打出一个符合小红书小工具容器规范的离线包（用于「小工具上传页」）：
+
+```bash
+npm run minitool        # 生成 minitool/ 与 suika-cat-minitool.zip（含容器规范静态门禁）
+npm run test:minitool   # 解压真实 zip，用假 window.xhs 容器跑 22 项断言
+```
+
+容器内自动启用端能力：**保存战绩卡到相册**（`writeTempFile` + `saveImageToPhotosAlbum`）、**一键打开发布页**（`postNote`）、最高分/静音走**平台 Storage** 并回填 localStorage；没有容器时全部降级为 Web 行为。兼容层按 Chrome 61 基线重写（不用 Flex `gap`、`inset`、`aspect-ratio`、裸 `clamp()`；毛玻璃放进 `@supports`）。
+
+- 产物：`suika-cat-minitool.zip`（约 29 KiB，zip 根目录直接是 `index.html`）
+- 改造与校验明细、能力核对、上传步骤、**尚未验证项**：见 [MINITOOL.md](MINITOOL.md)
+
 ## 技术说明
 
 - **渲染**：Canvas 2D，逻辑坐标系 720×(≥1280)；比 9:16 更瘦长的手机屏会按宽度铺满并把世界纵向拉长，iPhone 上**满屏无黑边**；宽屏则 9:16 居中。

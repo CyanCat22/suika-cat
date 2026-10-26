@@ -217,22 +217,13 @@
     return c;
   }
 
-  function toBlobAsync(canvas) {
-    return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/png'));
-  }
-
+  /* 保存：小工具容器里用 saveImageToPhotosAlbum（容器禁用 a[download] 与 blob 下载）。
+   * 普通浏览器没有相册能力，返回 data URL 由界面提示「长按 / 右键保存」。 */
   function save(canvas, filename) {
-    return toBlobAsync(canvas).then((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename || '合成大猫咪.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-      return url;
-    });
+    const platform = window.CatPlatform;
+    if (platform && platform.canSave()) return platform.saveImage(canvas);
+    const dataUrl = canvas.toDataURL('image/png');
+    return Promise.resolve(dataUrl);
   }
 
   window.CatShare = {
@@ -241,6 +232,5 @@
     card: drawCard,
     cover: drawCover,
     save: save,
-    toBlobAsync: toBlobAsync,
   };
 })();

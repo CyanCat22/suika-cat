@@ -10,17 +10,32 @@
 
     init: function () {
       if (this.ready) {
-        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (this.ctx && this.ctx.state === 'suspended') this.resumeSafe();
         return;
       }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
-      this.ctx = new AC();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = this.muted ? 0 : 0.5;
-      this.master.connect(this.ctx.destination);
-      this.ready = true;
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // 容器里音频被策略拦住时，构造或 resume 都可能抛错：音频失败不能影响游戏
+      try {
+        this.ctx = new AC();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = this.muted ? 0 : 0.5;
+        this.master.connect(this.ctx.destination);
+        this.ready = true;
+        this.resumeSafe();
+      } catch (err) {
+        this.ready = false;
+        this.ctx = null;
+        this.master = null;
+      }
+    },
+
+    resumeSafe: function () {
+      if (!this.ctx) return;
+      try {
+        const p = this.ctx.resume();
+        if (p && typeof p.catch === 'function') p.catch(function () {});
+      } catch (err) {}
     },
 
     setMuted: function (v) {

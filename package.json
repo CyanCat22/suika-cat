@@ -11,8 +11,14 @@
     "test": "node tests/qa-func.mjs",
     "shots": "node tests/shots.mjs",
     "devices": "node tests/devices.mjs",
-    "art": "node tests/art-shot.mjs"
+    "art": "node tests/art-shot.mjs",
+    "minitool": "node scripts/build-minitool.mjs",
+    "test:minitool": "node tests/minitool.mjs"
   },
-  "engines": { "node": ">=18" },
-  "devDependencies": { "puppeteer-core": "^23.11.1" }
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
 }

@@ -6,6 +6,7 @@
   const G = window.CatGame;
   const Sound = window.CatAudio;
   const Share = window.CatShare;
+  const platform = window.CatPlatform || null;
   const $ = (id) => document.getElementById(id);
 
   const canvas = $('game');
@@ -119,6 +120,7 @@
     $('over-combo').textContent = 'x' + data.maxCombo;
     $('over-record').classList.toggle('show', !!data.isRecord);
     showOnly('over');
+    if (platform) platform.saveBest(data.best);
   }
 
   function startGame() {
@@ -146,6 +148,7 @@
     Sound.init();
     Sound.toggleMute();
     syncMuteBtn();
+    if (platform) platform.saveMuted(Sound.muted);
   }
 
   function syncMuteBtn() {
@@ -177,13 +180,52 @@
     img.src = cardCanvas.toDataURL('image/png');
     showOnly('share');
   });
+  let tipTimer = 0;
+  function showTip(text) {
+    const tip = $('save-tip');
+    if (!tip) return;
+    if (text) tip.textContent = text;
+    tip.classList.add('show');
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(() => tip.classList.remove('show'), 2600);
+  }
+
   $('btn-save').addEventListener('click', () => {
     if (!cardCanvas) return;
+    // 小工具容器禁用 a[download]，优先用平台「保存到相册」
+    if (platform && platform.canSave()) {
+      showTip('正在保存…');
+      platform.saveImage(cardCanvas).then(
+        () => showTip('已保存到相册'),
+        () => showTip('保存失败，可截图保存')
+      );
+      return;
+    }
     Share.save(cardCanvas, '合成大猫咪_' + ((shareData && shareData.score) || 0) + '分.png');
-    const tip = $('save-tip');
-    tip.classList.add('show');
-    setTimeout(() => tip.classList.remove('show'), 2600);
+    showTip('已保存 · 长按图片可存相册');
   });
+
+  // 容器支持 postNote 时，直接带着战绩卡打开笔记发布页
+  if (platform && platform.canPost()) {
+    const postBtn = $('btn-post');
+    if (postBtn) {
+      postBtn.hidden = false;
+      postBtn.addEventListener('click', () => {
+        if (!cardCanvas) return;
+        const cat = CFG.catOf((shareData && shareData.maxLevel) || 0).name;
+        const score = (shareData && shareData.score) || 0;
+        showTip('正在打开笔记…');
+        platform.postNote(cardCanvas, {
+          title: '我合成了' + cat,
+          content: '《合成大猫咪》打到 ' + score + ' 分，进化到「' + cat +
+            '」。两只一样的猫碰一下就合成下一级，10 级能合出猫神，你能合到哪一只？',
+        }).then(
+          () => showTip('已打开发布页'),
+          () => showTip('打开失败，可先保存图片')
+        );
+      });
+    }
+  }
   $('btn-close-share').addEventListener('click', () => {
     showOnly(G.state === 'over' ? 'over' : null);
   });
@@ -193,7 +235,8 @@
     const el = $('menu-chain');
     if (!el || !window.CatArt) return;
     const cssW = el.clientWidth || 320;
-    const cssH = 96;
+    // 保持 canvas 固有比例 720:150，避免纵向被拉伸（Chrome 61 不用 aspect-ratio）
+    const cssH = Math.max(56, Math.round((cssW * 150) / 720));
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     el.width = Math.round(cssW * dpr);
     el.height = Math.round(cssH * dpr);
@@ -228,6 +271,25 @@
     if (document.hidden && G.state === 'playing') togglePause();
   });
 
+  if (platform && platform.inContainer()) {
+    const tip = $('save-tip');
+    if (tip) tip.textContent = '已保存到相册';
+  }
+  if (platform) {
+    platform.loadState().then((state) => {
+      if (!state) return;
+      if (state.best > G.best) {
+        G.best = state.best;
+        try { localStorage.setItem('suika-cat-best', String(G.best)); } catch (err) {}
+        G.render();
+      }
+      if (typeof state.muted === 'boolean') {
+        Sound.setMuted(state.muted);
+        syncMuteBtn();
+      }
+    });
+  }
+
   window.addEventListener('resize', resize);
   resize();
   syncMuteBtn();
@@ -248,6 +310,7 @@
       return b;
     },
     overlay: function (name) { showOnly(name); },
+    platform: platform,
     cardCanvas: function (data) { return Share.card(data || shareData || {}); },
     coverCanvas: function () { return Share.cover(); },
     get state() { return G.state; },

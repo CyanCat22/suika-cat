@@ -4,3 +4,6 @@ node_modules/
 
 # 自动化运行时产生的临时图
 shots/_*
+
+# 小工具打包的中间目录（zip 是产物，保留在仓库里）
+minitool/

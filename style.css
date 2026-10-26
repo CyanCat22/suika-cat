@@ -1,4 +1,10 @@
-/* 合成大猫咪 · 竖屏界面样式 */
+/* 合成大猫咪 · 竖屏界面样式
+ * 兼容层：Chrome 61 / Android 8.1 WebView 基线，现代能力只做增强。
+ * - 不使用 inset / aspect-ratio / 依赖 Flex gap：统一改成 top/left/right/bottom 与子项 margin
+ * - clamp()/max() 先写 vmin 固定值兜底，再写现代写法
+ * - backdrop-filter 放进 @supports，基线是不依赖模糊的实色背景
+ * - 安全区用 var(--safe-area-inset-*, env(...))，PC 模拟器注入变量、真机走 env()
+ */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body {
@@ -10,6 +16,7 @@ html, body {
   color: #5b3b2e;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
   touch-action: none;
 }
 
@@ -17,7 +24,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: 0;
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
 #app {
@@ -41,8 +52,12 @@ body {
 
 #ui {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
+  font-size: 3.4vmin;
   font-size: clamp(13px, 3.4vmin, 20px);
 }
 
@@ -51,30 +66,35 @@ body {
 /* ---------- 角落按钮 ---------- */
 .corner-btns {
   position: absolute;
+  right: 10px;
   right: max(10px, 2.2vmin);
+  bottom: 10px;
   bottom: max(10px, 2.2vmin);
   display: flex;
-  gap: 8px;
   z-index: 6;
 }
+.corner-btns > * + * { margin-left: 8px; }
+
 .icon-btn {
+  width: 38px;
   width: max(38px, 7vmin);
+  height: 38px;
   height: max(38px, 7vmin);
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.9);
   color: #a2653f;
+  font-size: 14px;
   font-size: max(14px, 2.6vmin);
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 3px 10px rgba(170, 110, 70, 0.18);
-  backdrop-filter: blur(6px);
   cursor: pointer;
   transition: transform 0.12s, background 0.12s;
 }
-.icon-btn:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.9); }
+.icon-btn:active { transform: scale(0.92); background: #fff; }
 
 /* ---------- 提示 ---------- */
 .hint {
@@ -86,6 +106,7 @@ body {
   border-radius: 999px;
   background: rgba(91, 59, 46, 0.72);
   color: #fff7ec;
+  font-size: 13px;
   font-size: max(13px, 2.9vmin);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -104,26 +125,44 @@ body {
 /* ---------- 通用弹层 ---------- */
 .screen {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 2.2vmin, 22px);
+  padding: 3.4vmin;
   padding: clamp(16px, 4vmin, 40px);
-  background: rgba(255, 244, 232, 0.93);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 244, 232, 0.985);
   opacity: 0;
   visibility: hidden;
   transform: scale(0.98);
   transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
   z-index: 4;
 }
+.screen > * + * { margin-top: 2.2vmin; }
 .screen.show { opacity: 1; visibility: visible; transform: scale(1); }
+
+/* 毛玻璃只是增强：Chrome 61 用上面的实色背景 */
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  .screen {
+    background: rgba(255, 244, 232, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.62);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+}
 
 /* ---------- 首页 ---------- */
 .logo-wrap { text-align: center; }
 .logo-sub {
+  font-size: 10px;
   font-size: max(10px, 2.1vmin);
   letter-spacing: 0.35em;
   color: rgba(176, 120, 92, 0.75);
@@ -131,6 +170,7 @@ body {
   margin-bottom: 4px;
 }
 .logo {
+  font-size: 11.5vmin;
   font-size: clamp(40px, 11.5vmin, 76px);
   font-weight: 900;
   letter-spacing: 0.02em;
@@ -141,16 +181,17 @@ body {
 .logo span { color: #f4661e; }
 .tagline {
   margin-top: 8px;
+  font-size: 13px;
   font-size: max(13px, 3vmin);
   font-weight: 600;
   color: rgba(150, 96, 70, 0.9);
 }
 
+/* canvas 自带 720×150 的固有比例，height:auto 即可等比，无需 aspect-ratio */
 #menu-chain {
   width: 100%;
   max-width: 460px;
   height: auto;
-  aspect-ratio: 720 / 150;
   opacity: 0.95;
 }
 
@@ -158,13 +199,14 @@ body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  font-size: 12px;
   font-size: max(12px, 2.75vmin);
   color: rgba(110, 74, 56, 0.92);
   line-height: 1.55;
   padding: 0 6px;
   max-width: 440px;
 }
+.howto li + li { margin-top: 6px; }
 .howto li { position: relative; padding-left: 1.5em; }
 .howto li::before { content: "🐾"; position: absolute; left: 0; font-size: 0.9em; }
 .howto b { color: #e2702a; }
@@ -175,6 +217,7 @@ body {
   cursor: pointer;
   padding: 0.72em 2.1em;
   border-radius: 999px;
+  font-size: 4.6vmin;
   font-size: clamp(18px, 4.6vmin, 28px);
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -183,6 +226,8 @@ body {
   box-shadow: 0 8px 0 #e2702a, 0 16px 26px rgba(226, 112, 42, 0.32);
   transition: transform 0.1s, box-shadow 0.1s;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .btn-main:active { transform: translateY(5px); box-shadow: 0 3px 0 #e2702a, 0 8px 14px rgba(226, 112, 42, 0.3); }
 
@@ -193,16 +238,26 @@ body {
   cursor: pointer;
   padding: 0.6em 1.5em;
   border-radius: 999px;
+  font-size: 14px;
   font-size: max(14px, 3.2vmin);
   font-weight: 700;
   font-family: inherit;
   transition: transform 0.1s, background 0.12s;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .btn-ghost:active { transform: scale(0.96); background: #fff; }
 
-.row-btns { display: flex; gap: 10px; }
+.row-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+.row-btns > * + * { margin-left: 10px; }
 
 .footnote {
+  font-size: 11px;
   font-size: max(11px, 2.4vmin);
   color: rgba(150, 100, 76, 0.75);
   text-align: center;
@@ -210,8 +265,10 @@ body {
 }
 
 /* ---------- 结束页 ---------- */
-.over-head { display: flex; align-items: center; gap: 10px; }
+.over-head { display: flex; align-items: center; }
+.over-head > * + * { margin-left: 10px; }
 .over-label {
+  font-size: 12px;
   font-size: max(12px, 2.6vmin);
   letter-spacing: 0.3em;
   color: rgba(150, 96, 70, 0.85);
@@ -220,6 +277,7 @@ body {
 .record {
   background: linear-gradient(180deg, #ff7aa2, #ff4d7d);
   color: #fff;
+  font-size: 12px;
   font-size: max(12px, 2.6vmin);
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -231,6 +289,7 @@ body {
 }
 .record.show { transform: rotate(-6deg) scale(1); }
 .over-score {
+  font-size: 21vmin;
   font-size: clamp(76px, 21vmin, 148px);
   font-weight: 900;
   line-height: 1;
@@ -238,28 +297,30 @@ body {
   text-shadow: 0 4px 0 #fff, 0 10px 0 rgba(255, 255, 255, 0.7), 0 18px 30px rgba(226, 112, 42, 0.3);
   font-variant-numeric: tabular-nums;
 }
-.over-best { font-size: max(13px, 2.9vmin); color: rgba(140, 92, 68, 0.9); }
+.over-best { font-size: 13px; font-size: max(13px, 2.9vmin); color: rgba(140, 92, 68, 0.9); }
 .over-best b { color: #5b3b2e; font-size: 1.2em; }
 
 .stat-grid {
   display: flex;
-  gap: 8px;
   width: 100%;
   max-width: 440px;
 }
+.stat-grid > div + div { margin-left: 8px; }
 .stat-grid > div {
   flex: 1;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.78);
   border-radius: 16px;
   padding: 10px 4px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(190, 130, 95, 0.12);
 }
-.stat-grid span { display: block; font-size: max(10px, 2.2vmin); color: rgba(150, 100, 76, 0.8); margin-bottom: 2px; }
-.stat-grid b { font-size: max(15px, 3.4vmin); color: #5b3b2e; }
+.stat-grid span { display: block; font-size: 10px; font-size: max(10px, 2.2vmin); color: rgba(150, 100, 76, 0.8); margin-bottom: 2px; }
+.stat-grid b { font-size: 15px; font-size: max(15px, 3.4vmin); color: #5b3b2e; }
 
 /* ---------- 暂停 ---------- */
 .pause-title {
+  font-size: 7vmin;
   font-size: clamp(26px, 7vmin, 42px);
   font-weight: 900;
   color: #5b3b2e;
@@ -270,6 +331,7 @@ body {
 /* ---------- 战绩卡 ---------- */
 #share-img {
   max-width: 100%;
+  max-height: 58%;
   max-height: 58vh;
   border-radius: 18px;
   box-shadow: 0 14px 34px rgba(180, 110, 70, 0.28);
@@ -282,6 +344,7 @@ body {
   transform: translateX(-50%);
   background: rgba(91, 59, 46, 0.86);
   color: #fff7ec;
+  font-size: 12px;
   font-size: max(12px, 2.6vmin);
   padding: 8px 16px;
   border-radius: 999px;
@@ -292,8 +355,22 @@ body {
 }
 .save-tip.show { opacity: 1; }
 
+/* ---------- Flex gap 增强层（Chrome 61 走上面的 margin 基线） ---------- */
+.supports-flex-gap .corner-btns { column-gap: 8px; }
+.supports-flex-gap .corner-btns > * + * { margin-left: 0; }
+.supports-flex-gap .screen { row-gap: 2.2vmin; row-gap: clamp(10px, 2.2vmin, 22px); }
+.supports-flex-gap .screen > * + * { margin-top: 0; }
+.supports-flex-gap .howto { row-gap: 6px; }
+.supports-flex-gap .howto li + li { margin-top: 0; }
+.supports-flex-gap .row-btns { column-gap: 10px; }
+.supports-flex-gap .row-btns > * + * { margin-left: 0; }
+.supports-flex-gap .over-head { column-gap: 10px; }
+.supports-flex-gap .over-head > * + * { margin-left: 0; }
+.supports-flex-gap .stat-grid { column-gap: 8px; }
+.supports-flex-gap .stat-grid > div + div { margin-left: 0; }
+
 @media (max-height: 560px) {
   .howto { display: none; }
   #menu-chain { max-width: 380px; }
-  .logo { font-size: clamp(30px, 9vmin, 46px); }
+  .logo { font-size: 9vmin; font-size: clamp(30px, 9vmin, 46px); }
 }

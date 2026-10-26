@@ -104,6 +104,25 @@ npm test        # 36 项验收：36 通过 / 0 失败
 - **超长局**：猫数上千时的性能未压测（正常一局 40~80 只）。
 - **无后端**：最高分仅存本机，换设备会清零。
 
+## 10. 小红书小工具包（离线 zip）验收
+
+按 `minitool-zip-builder` v1.8.0 做容器化改造后新增两道关：
+
+| 关卡 | 命令 | 结果 |
+| --- | --- | --- |
+| 静态门禁（结构 / 入口 / 禁用能力 / Chrome 61 语法与 CSS / 包体 + 官方审计脚本） | `npm run minitool` | ✓ 通过，zip 28.7 KiB |
+| 运行验收（解压真实 zip，注入假 `window.xhs` 容器） | `npm run test:minitool` | ✓ 22 通过 / 0 失败 |
+| 原 Web 版回归 | `npm test` | ✓ 36 通过 / 0 失败 |
+
+改造中修掉的问题：
+
+1. **`<a download>` / blob 下载**——容器明令禁用，改为 `writeTempFile` + `saveImageToPhotosAlbum`，无容器时提示长按/右键保存。
+2. **`localStorage` 单点依赖**——改为平台 `setStorage`/`getStorage`（9.46+ 版本判断）优先 + localStorage 兜底 + 启动回填。
+3. **Chrome 61 基线**——Flex `gap` 改子项 margin（JS 行为检测后才启用 gap 增强）、`clamp()/max()` 补旧值、`inset` 改四边、`aspect-ratio` 改 canvas 固有比例、毛玻璃放进 `@supports`、安全区用 `var(--safe-area-inset-*, env(...))`。
+4. **音频构造未兜底**——`AudioContext` 构造 / `resume()` 全部 try/catch，失败静音降级不打断输入。
+
+仍未验证（已在 MINITOOL.md 标注）：创服平台模拟器、Android 真机、iOS 真机、Chrome 61 实机、真机帧率——本地只能做静态门禁与模拟容器，不能替代真容器验收。
+
 ## 9. 复跑
 
 ```bash
