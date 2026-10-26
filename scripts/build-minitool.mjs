@@ -15,7 +15,7 @@ const ZIP = path.join(ROOT, 'suika-cat-minitool.zip');
 const SKILL_AUDIT = path.resolve(ROOT, '../.skill/minitool-zip-builder/scripts/audit_artifact.mjs');
 
 const ALLOWED_EXT = new Set(['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff', '.woff2', '.json']);
-const FILES = ['index.html', 'style.css', 'js/config.js', 'js/physics.js', 'js/art.js', 'js/audio.js', 'js/compat.js', 'js/xhs.js', 'js/game.js', 'js/sharecard.js', 'js/main.js'];
+const FILES = ['index.html', 'style.css', 'assets/icon-180.png', 'assets/icon-192.png', 'js/config.js', 'js/physics.js', 'js/art.js', 'js/audio.js', 'js/compat.js', 'js/xhs.js', 'js/game.js', 'js/sharecard.js', 'js/main.js'];
 
 const problems = [];
 const warns = [];
@@ -85,6 +85,11 @@ function checkHtml() {
     if (/^https?:\/\//i.test(url)) fail(`引用了外部资源: ${url}`);
     if (/^\/\//.test(url)) fail(`使用了协议相对路径: ${url}`);
     if (url.startsWith('/')) fail(`使用了绝对路径: ${url}`);
+    // 引用的包内资源必须真实存在（不含 data: 与锚点）
+    if (!/^data:/i.test(url) && !url.startsWith('#')) {
+      const target = path.join(OUT, url.replace(/^\.\//, ''));
+      if (!fs.existsSync(target)) fail(`引用的资源不在包内: ${url}`);
+    }
   }
 }
 

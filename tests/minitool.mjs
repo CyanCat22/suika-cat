@@ -52,6 +52,7 @@ async function newPage(withContainer) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url()));
   if (withContainer) {
     await page.evaluateOnNewDocument(() => {
       window.__XHS = [];
@@ -146,7 +147,7 @@ console.log('\n[1] 容器内（注入 window.xhs 假容器）');
 
   const storeCalls = await page.evaluate(() => window.__XHS.filter((c) => c.api === 'setStorage'));
   ok('最高分写入平台 Storage', storeCalls.some((c) => c.key === 'suika-cat-best' && c.data === '1286'), JSON.stringify(storeCalls));
-  ok('容器内无 JS 报错', errors.length === 0, errors.join(' | '));
+  ok('容器内无 JS 报错 / 无资源 404', errors.length === 0, errors.join(' | '));
   await page.close();
 }
 
@@ -179,7 +180,7 @@ console.log('\n[2] 无容器（普通浏览器打开同一份包）');
     shown: document.getElementById('save-tip').classList.contains('show'),
   }));
   ok('无容器保存给出「长按 / 右键」提示', /长按|右键/.test(tip.text) && tip.shown, JSON.stringify(tip));
-  ok('无容器路径无 JS 报错', errors.length === 0, errors.join(' | '));
+  ok('无容器路径无 JS 报错 / 无资源 404', errors.length === 0, errors.join(' | '));
   await page.close();
 }
 

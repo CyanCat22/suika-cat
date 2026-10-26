@@ -93,6 +93,17 @@ gh auth login        # 本机 GitHub CLI 只需登录一次
 - 上线地址形如 `https://<你>.github.io/suika-cat/`，手机浏览器直接打开即可玩。
 - 想换仓库名/账号：`OWNER=xxx REPO=yyy ./deploy.sh`。
 
+## 图标与封面
+
+| 用途 | 文件 | 尺寸 |
+| --- | --- | --- |
+| 游戏图标（上传页 / 应用商店 / 宣传） | `assets/icon-1024.png`、`assets/icon-512.png` | 1024×1024、512×512 |
+| 网页图标、手机「添加到主屏幕」 | `assets/icon-192.png`、`assets/icon-180.png` | 192×192、180×180 |
+| 小红书封面（3:4） | `shots/xhs-cover.png` | 1080×1440 |
+| 战绩卡（3:4，带分数与图鉴） | `shots/xhs-card.png` | 1080×1440 |
+
+图标同样是游戏里的 `CatArt` 画的（等级 1 橘宝宝），换配色/换猫后执行 `npm run icons` 重新生成四个尺寸；封面与战绩卡用 `npm run shots` 重新生成。
+
 ## 小红书小工具版（离线 zip）
 
 除了直接部署的 H5，本仓库还能打出一个符合小红书小工具容器规范的离线包（用于「小工具上传页」）：

@@ -33,7 +33,7 @@
 | `AudioContext` 直接 `new` | 音频被策略拦截时可能抛错、打断输入 | 构造与 `resume()` 全部 try/catch + Promise catch，失败时静音降级，不影响游戏 |
 | Flex `gap`、`clamp()`/`max()`、`inset`、`aspect-ratio`、`backdrop-filter`、裸 `env()` | Chrome 61 不支持，会整条丢弃或布局错位 | 全部补基线层：子项 margin、先写 vmin 固定值再写现代写法、`top/right/bottom/left`、canvas 固有比例、`@supports` 内才启用毛玻璃、`var(--safe-area-inset-*, env(...))` |
 
-改动文件：`index.html`、`style.css`、`js/main.js`、`js/sharecard.js`、`js/audio.js`，新增 `js/compat.js`（Flex gap 行为检测）、`js/xhs.js`（容器桥）。
+改动文件：`index.html`、`style.css`、`js/main.js`、`js/sharecard.js`、`js/audio.js`，新增 `js/compat.js`（Flex gap 行为检测）、`js/xhs.js`（容器桥）。包内另带 `assets/icon-180.png`、`assets/icon-192.png`（网页/主屏图标），构建时会校验「HTML 引用的资源必须都在包内」。
 
 ## 3. 校验结果
 
