@@ -601,3 +601,43 @@ body {
   font-size: 12px;
   font-size: max(12px, 2.9vmin);
 }
+
+/* ============================================================
+ * 短屏兜底（2026-10-27）：保证「开始」与「图鉴」入口一定在首屏
+ * - .screen 可纵向滚动 + auto 外边距：内容超出时从顶部开始，可滑到按钮
+ * - 矮屏逐级收起说明文字/进化链，优先保住两个按钮
+ * ============================================================ */
+.screen {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+#menu > *:first-child,
+#over > *:first-child,
+#pause > *:first-child { margin-top: auto; }
+#menu > *:last-child,
+#over > *:last-child,
+#pause > *:last-child { margin-bottom: auto; }
+
+@media (max-height: 700px) {
+  #menu-chain { max-width: 340px; }
+}
+
+@media (max-height: 600px) {
+  .howto { display: none; }
+  #menu-chain { display: none; }
+  .logo { font-size: 9.5vmin; font-size: clamp(30px, 9.5vmin, 52px); }
+  .logo-sub { letter-spacing: 0.24em; margin-bottom: 2px; }
+  .tagline { margin-top: 5px; font-size: 12px; font-size: max(12px, 2.7vmin); }
+  .screen > * + * { margin-top: 1.4vmin; margin-top: clamp(7px, 1.5vmin, 14px); }
+  .menu-stats { font-size: 11px; }
+  .nick-row { padding: 4px 10px; }
+  .btn-main { padding-top: 11px; padding-bottom: 11px; }
+  .footnote { display: none; }
+}
+
+@media (max-height: 500px) {
+  .logo { font-size: 8.5vmin; font-size: clamp(26px, 8.5vmin, 44px); }
+  .tagline { display: none; }
+  .btn-small { padding-top: 7px; padding-bottom: 7px; }
+}

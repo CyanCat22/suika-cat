@@ -557,17 +557,19 @@ ok('封面只保留标题文字（无描述 / 步骤说明）', cover.w === 1080
 ok('封面顶部原描述文字位置已清空', cover.ink < 50, String(cover.ink));
 
 console.log('\n[13] 新界面布局（320 / 360 / 390）');
-for (const vp of [{ w: 390, h: 844 }, { w: 360, h: 640 }, { w: 320, h: 568 }]) {
+for (const vp of [{ w: 390, h: 844 }, { w: 375, h: 667 }, { w: 360, h: 640 }, { w: 320, h: 568 }, { w: 360, h: 520 }, { w: 320, h: 480 }]) {
   await page.setViewport({ width: vp.w, height: vp.h, deviceScaleFactor: 2 });
   await page.evaluate(() => { SUIKA.overlay('menu'); });
   await sleep(200);
   const lay = await page.evaluate(() => {
     const start = document.getElementById('btn-start').getBoundingClientRect();
+    const gallery = document.getElementById('btn-gallery').getBoundingClientRect();
     const menu = document.getElementById('menu');
     const stats = document.querySelector('.menu-stats').getBoundingClientRect();
     const nick = document.querySelector('.nick-row').getBoundingClientRect();
     return {
       startBottom: Math.round(start.bottom),
+      galleryBottom: Math.round(gallery.bottom),
       vh: innerHeight,
       overflowX: document.documentElement.scrollWidth > innerWidth + 1,
       menuOverflow: menu.scrollHeight > menu.clientHeight + 2,
@@ -575,7 +577,7 @@ for (const vp of [{ w: 390, h: 844 }, { w: 360, h: 640 }, { w: 320, h: 568 }]) {
       nickW: Math.round(nick.width),
     };
   });
-  ok(vp.w + '×' + vp.h + ' 首页按钮在视口内、无溢出', lay.startBottom <= lay.vh && !lay.overflowX && !lay.menuOverflow, JSON.stringify(lay));
+  ok(vp.w + '×' + vp.h + ' 首页「开始」「图鉴」都在首屏、无溢出', lay.startBottom <= lay.vh && lay.galleryBottom <= lay.vh && !lay.overflowX && !lay.menuOverflow, JSON.stringify(lay));
 
   // 图鉴 2 列
   await page.evaluate(() => SUIKA.openGallery());
