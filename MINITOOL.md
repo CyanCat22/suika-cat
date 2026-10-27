@@ -2,7 +2,7 @@
 
 按 `minitool-zip-builder` v1.8.0（`.skill/minitool-zip-builder/SKILL.md`）对《合成大猫咪》做容器化改造、校验并打包。
 
-- **产物**：`suika-cat-minitool.zip`（102.9 KiB，zip 根目录直接是 `index.html`）
+- **产物**：`suika-cat-minitool.zip`（103.3 KiB，zip 根目录直接是 `index.html`）
 - **构建**：`npm run minitool`（= `node scripts/build-minitool.mjs`，会重新生成 `minitool/` 并压缩）
 - **验收**：`npm run test:minitool`（= `node tests/minitool.mjs`，解压真实 zip 后跑 38 项断言）
 
@@ -55,7 +55,7 @@
 | CSS：无裸 `inset`/`aspect-ratio`、Flex 间距不依赖 `gap`（`.supports-flex-gap` 增强层除外）、每个 `clamp()/max()/min()` 声明都有旧值兜底、`backdrop-filter` 只在 `@supports` 内、安全区用 `var(--safe-area-inset-*, env(...))` | ✓ |
 | 单条内联 base64 < 100 KiB | ✓（favicon < 1 KiB） |
 | 官方审计脚本 `audit_artifact.mjs` 对目录与 zip 各跑一次 | ✓ `PASS: 11 file(s), 0 warning(s)` / zip `PASS` |
-| zip ≤ 10 MiB（建议 ≤ 2 MiB） | ✓ 102.9 KiB |
+| zip ≤ 10 MiB（建议 ≤ 2 MiB） | ✓ 103.3 KiB |
 
 ### 3.2 运行验收（`tests/minitool.mjs`，38 项全过）
 

@@ -110,7 +110,7 @@ npm test        # 77 项验收：77 通过 / 0 失败
 
 | 关卡 | 命令 | 结果 |
 | --- | --- | --- |
-| 静态门禁（结构 / 入口 / 禁用能力 / Chrome 61 语法与 CSS / 包体 + 官方审计脚本） | `npm run minitool` | ✓ 通过，zip 102.9 KiB |
+| 静态门禁（结构 / 入口 / 禁用能力 / Chrome 61 语法与 CSS / 包体 + 官方审计脚本） | `npm run minitool` | ✓ 通过，zip 103.3 KiB |
 | 运行验收（解压真实 zip，注入假 `window.xhs` 容器） | `npm run test:minitool` | ✓ 38 通过 / 0 失败 |
 | 原 Web 版回归 | `npm test` | ✓ 77 通过 / 0 失败 |
 
