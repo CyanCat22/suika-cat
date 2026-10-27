@@ -193,8 +193,7 @@
     const ctx = c.getContext('2d');
     backdrop(ctx);
 
-    smallText(ctx, '一局 1 分钟的猫咪小游戏', W / 2, 200, 34, 'rgba(176,120,92,0.9)', 700);
-
+    // 封面只留标题与猫：描述性文案（"一局 1 分钟"、玩法步骤、10 级进化…）会影响首图观感，统一删掉
     bigText(ctx, '合成', W / 2, 430, 150, '#f4661e', { stroke: '#fffaf2', strokeWidth: 20 });
     bigText(ctx, '大猫咪', W / 2, 600, 150, '#f4661e', { stroke: '#fffaf2', strokeWidth: 20 });
 
@@ -208,14 +207,6 @@
       Art.draw(ctx, { x: 190 + i * 140, y: 1050, r: 32, level: i + 1, t: 0, blink: false });
     }
 
-    ctx.save();
-    roundRect(ctx, 250, 1150, W - 500, 104, 52);
-    ctx.fillStyle = '#5b3b2e';
-    ctx.fill();
-    ctx.restore();
-    smallText(ctx, '两只一样的猫 → 变下一级', W / 2, 1216, 36, '#fff5e8', 800);
-
-    smallText(ctx, '10 级进化 · 你能养出猫神吗', W / 2, 1320, 32, 'rgba(140,96,74,0.9)', 700);
     return c;
   }
 

@@ -536,6 +536,26 @@ ok('战绩卡 1080×1440 且预览可见', cardInfo.card[0] === 1080 && cardInfo
 ok('「查看文案」展开可复制的正文', cardInfo.text.indexOf('888') >= 0 && cardInfo.text.indexOf('合成大猫咪') >= 0, cardInfo.text.slice(0, 60));
 ok('分享用的 snapshot 也 ≤2KB', cardInfo.cardSnap.json.length <= 2048, String(cardInfo.cardSnap.json.length));
 
+// 封面：只保留标题，删掉所有描述性文案（2026-10-27 按反馈调整）
+const cover = await page.evaluate(() => {
+  const proto = CanvasRenderingContext2D.prototype;
+  const orig = proto.fillText;
+  const texts = [];
+  proto.fillText = function (t) { texts.push(String(t)); return orig.apply(this, arguments); };
+  let cv;
+  try { cv = window.CatShare.cover(); } finally { proto.fillText = orig; }
+  const ctx = cv.getContext('2d');
+  // 「一局 1 分钟」原来画在 y≈200 附近，这一横带应当干净
+  const band = ctx.getImageData(0, 150, cv.width, 110).data;
+  let ink = 0;
+  for (let i = 0; i < band.length; i += 4) {
+    if ((band[i] + band[i + 1] + band[i + 2]) / 3 < 200) ink++;
+  }
+  return { texts, ink, w: cv.width, h: cv.height };
+});
+ok('封面只保留标题文字（无描述 / 步骤说明）', cover.w === 1080 && cover.h === 1440 && cover.texts.join('') === '合成大猫咪', JSON.stringify(cover.texts));
+ok('封面顶部原描述文字位置已清空', cover.ink < 50, String(cover.ink));
+
 console.log('\n[13] 新界面布局（320 / 360 / 390）');
 for (const vp of [{ w: 390, h: 844 }, { w: 360, h: 640 }, { w: 320, h: 568 }]) {
   await page.setViewport({ width: vp.w, height: vp.h, deviceScaleFactor: 2 });
